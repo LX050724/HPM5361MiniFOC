@@ -1,0 +1,10 @@
+{
+    "cmake.configureArgs": [
+        "-DBOARD_SEARCH_PATH=${workspaceFolder}/boards",
+        "-DBOARD=HPM5361MiniFOC",
+        "-DCMAKE_BUILD_TYPE=flash_xip"
+    ],
+    "cmake.enabledOutputParsers": [
+        "cmake"
+    ]
+}

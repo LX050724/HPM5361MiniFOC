@@ -1,0 +1,34 @@
+board:
+    name: HPM5361MiniFOC
+    soc: HPM5361
+    device: HPM5361xEGx
+    openocd-soc: hpm5361
+    openocd-probe: jlink
+    on-board-flash:
+      type: qspi-nor-flash
+      size: 1M
+    feature:
+      - sei
+      - rdc
+      - qeiv2
+      - linv2
+      - dmav2
+      - qeo
+      - pwm
+      - mmc
+      - plb
+      - dac
+      - adc16
+      - pdgo
+      - mcan
+      - ewdg
+      - gpiom
+      - tsns
+      - crc
+      - spi
+      - i2c
+      - usb-otg
+      - ptp
+      - motor-control
+      - bldc_hfi
+      - bldc_smc
