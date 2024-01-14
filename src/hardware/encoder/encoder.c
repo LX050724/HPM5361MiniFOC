@@ -5,18 +5,13 @@
 
 typedef struct
 {
-#if GET_ENCODER_INTERFACE(ENCODER_TYPE) == ENCODER_LINEAR_HALL
+    uint8_t direction;
+    uint8_t pole_pairs;
+    uint16_t ang_offset;
     uint16_t a_max;
     uint16_t a_min;
     uint16_t b_max;
     uint16_t b_min;
-#elif GET_ENCODER_INTERFACE(ENCODER_TYPE) == ENCODER_INTERFACE_ANALOG
-    uint16_t max;
-    uint16_t min;
-#endif
-    uint8_t direction;
-    uint8_t pole_pairs;
-    uint16_t ang_offset;
 } encoder_t;
 
 static encoder_t encoder;

@@ -47,7 +47,7 @@ DMA_ATTR just_float_data vofa_data[BUF_NUM];
 float VBUS; //!<@brief 母线电压
 int intr_count;
 
-foc_qd_current_t out_qd_current = {1};
+foc_qd_current_t out_qd_current = {0.2};
 foc_pll_t speed_pll;
 
 #if 1
@@ -209,8 +209,8 @@ int main(void)
 #endif
 
     /* 电角度校准 */
-    // electrical_angle_calibration();
-    encoder_set_param(1, 7, 26211);
+    electrical_angle_calibration();
+    // encoder_set_param(1, 7, 26211);
 
     pwm_enable_all_output();
     encoder_set_callback(mt6701_isr_callback);

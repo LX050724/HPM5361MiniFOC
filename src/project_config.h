@@ -29,7 +29,7 @@ extern "C" {
 #define SVPWM_MAX (PWM_RELOAD - 100)            // svpwm占空比最大值
 #define SPEED_PID_FREQUENCY 5000                // 速度、位置环频率
 #define ELECTRICAL_ANGLE_CALIBRATION_POWER 0.4f // 电角度校准油门
-#define ELECTRICAL_ANGLE_CALIBRATION_DELAY 1000 // 电角度校准延迟
+#define ELECTRICAL_ANGLE_CALIBRATION_DELAY 500 // 电角度校准延迟
 
 /* ADC参数 */
 // #define USE_AUTO_SIMPLETIME 0                         // 自动切换采样时刻开关

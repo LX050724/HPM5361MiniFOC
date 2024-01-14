@@ -97,10 +97,10 @@ int electrical_angle_calibration()
         return -1;
     }
 
-    uint8_t pole_pairs = 1 / (b * 2 * F_PI / 65536.0f) + 0.5f;
+    uint8_t pole_pairs = 1 / (fabsf(b) * 2 * F_PI / 65536.0f) + 0.5f;
     uint16_t offset = a + 0.5f;
-    SEGGER_RTT_printf(0, "calibration success: direction = %d, offset = %d, pole_pairs = %d\n", a > 0, offset,
+    SEGGER_RTT_printf(0, "calibration success: direction = %d, offset = %d, pole_pairs = %d\n", b > 0, offset,
                       pole_pairs);
-    encoder_set_param(a > 0, pole_pairs, offset);
+    encoder_set_param(b > 0, pole_pairs, offset);
     return 0;
 }
