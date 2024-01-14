@@ -1,7 +1,8 @@
 .cache/
 .vscode/
-build/
+*build/
 *.jscope
 pin_pinmux.c
 pin_pinmux.h
 pin.hpmpc
+xx.py

@@ -16,7 +16,6 @@ extern "C" {
 void init_jtag_pins(void);
 void init_xtal_pins(void);
 void init_py_pins_as_pgpio(void);
-void init_uart_pins(UART_Type *ptr);
 void init_i2c_pins(I2C_Type *ptr);
 void init_gpio_pins(void);
 void init_spi_pins(SPI_Type *ptr);

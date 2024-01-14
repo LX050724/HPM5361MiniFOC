@@ -1,18 +1,52 @@
 #pragma once
 
+#include "hpm_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ENCODER_MT6701 1
+/* 编码器接口类型 */
+#define ENCODER_INTERFACE_SSI 1
+#define ENCODER_INTERFACE_IIC 2
+#define ENCODER_INTERFACE_SPI 3
+#define ENCODER_INTERFACE_QEI 4
+#define ENCODER_INTERFACE_LINEAR_HALL 5
+#define ENCODER_INTERFACE_ANALOG 6
 
-#define ENCODER_TYPE ENCODER_MT6701
+/* 编码器类型 */
+#define ENCODER_MT6701 (ENCODER_INTERFACE_SSI << 8 | 1)
+#define ENCODER_UVW (ENCODER_INTERFACE_QEI << 8 | 2)
+#define ENCODER_ABZ (ENCODER_INTERFACE_QEI << 8 | 3)
+#define ENCODER_LINEAR_HALL (ENCODER_INTERFACE_LINEAR_HALL << 8 | 4)
 
-#define USE_AUTO_SIMPLETIME 0
-#define PWM_FREQUENCY (50000) /*PWM 频率  单位HZ*/
-#define SPEED_PID_FREQUENCY (5000)
-#define PWM_RELOAD (motor_clock_hz / PWM_FREQUENCY) /*20K hz  = 200 000 000/PWM_RELOAD */
-#define ADC_IGNORE_BIT 0
+#define ENCODER_TYPE ENCODER_MT6701 // 编码器类型
+
+/* 时间参数 */
+#define AHB_CLOCK 240000000                     // AHB时钟
+#define PWM_FREQUENCY 50000                     // PWM频率
+#define PWM_RELOAD (AHB_CLOCK / PWM_FREQUENCY)  // PWM重载值
+#define SVPWM_MAX (PWM_RELOAD - 100)            // svpwm占空比最大值
+#define SPEED_PID_FREQUENCY 5000                // 速度、位置环频率
+#define ELECTRICAL_ANGLE_CALIBRATION_POWER 0.4f // 电角度校准油门
+#define ELECTRICAL_ANGLE_CALIBRATION_DELAY 1000 // 电角度校准延迟
+
+/* ADC参数 */
+// #define USE_AUTO_SIMPLETIME 0                         // 自动切换采样时刻开关
+#define SAMPLING_RESISTOR 0.005f                      // 采样电阻 Ω
+#define CURRENT_AMP 20.0f                             // 电流运放放大倍数
+#define CURRENT_COE (SAMPLING_RESISTOR * CURRENT_AMP) // 电流系数 V/A
+#define VOLTAGE_AMP 11.0f                             // 母线电压放大倍数
+#define ADC_IGNORE_BIT 0                              // ADC低位舍弃
+#define ADC_ENABLE_FILTER 0                           // 启用2位滑动平均滤波
+#define ADC_CALIBRATION_TIMES 1024                    // ADC校准采样次数
+
+#if ADC_CALIBRATION_TIMES > 65536
+#error "ADC_CALIBRATION_TIMES > 65536"
+#endif
+
+#define GET_ENCODER_INTERFACE(x) (((x) >> 8) & 0xff)
+#define DMA_ATTR ATTR_PLACE_AT_NONCACHEABLE ATTR_ALIGN(ADC_SOC_DMA_ADDR_ALIGNMENT)
 
 #ifdef __cplusplus
 }

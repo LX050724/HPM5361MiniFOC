@@ -236,8 +236,8 @@
 #define BOARD_BLDC_ADC_CH_VBUS_2               (7U)
 #define BOARD_BLDC_ADC_IRQn                    IRQn_ADC0
 #define BOARD_BLDC_ADC_SEQ_DMA_SIZE_IN_4BYTES  (48U)
-#define BOARD_BLDC_ADC_CH_U_TRG                ADC16_CONFIG_TRG0A
-#define BOARD_BLDC_ADC_CH_V_TRG                ADC16_CONFIG_TRG0B
+#define BOARD_BLDC_ADC_CH_V_TRG                ADC16_CONFIG_TRG0A
+#define BOARD_BLDC_ADC_CH_W_TRG                ADC16_CONFIG_TRG0B
 #define BOARD_BLDC_ADC_PREEMPT_TRIG_LEN        (1U)
 #define BOARD_BLDC_PWM_TRIG_CMP_INDEX          (8U)
 #define BOARD_BLDC_TRIGMUX_IN_NUM              HPM_TRGM0_INPUT_SRC_PWM0_CH8REF
@@ -305,7 +305,6 @@ void board_init_led_pins(void);
 void board_init_usb_pins(void);
 void board_led_write(uint8_t pin, uint8_t state);
 void board_led_toggle(uint8_t pin);
-void board_init_uart(UART_Type *ptr);
 uint32_t board_init_spi_clock(SPI_Type *ptr);
 void board_init_spi_pins(SPI_Type *ptr);
 void board_usb_vbus_ctrl(uint8_t usb_index, uint8_t level);
@@ -315,9 +314,6 @@ uint32_t board_init_dac_clock(DAC_Type *ptr, bool clk_src_ahb);
 void board_init_can_pins(MCAN_Type *ptr);
 uint32_t board_init_can_clock(MCAN_Type *ptr);
 void board_init_rgb_pwm_pins(void);
-void board_disable_output_rgb_led(uint8_t color);
-void board_enable_output_rgb_led(uint8_t color);
-void board_init_dac_pins(DAC_Type *ptr);
 void board_write_spi_cs(uint32_t pin, uint8_t state);
 void board_init_spi_pins_with_gpio_as_cs(SPI_Type *ptr);
 void board_init_lin_pins(LINV2_Type *ptr);

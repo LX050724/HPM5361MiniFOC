@@ -1,4 +1,5 @@
 #pragma once
+#include "foc/foc_core.h"
 #include "foc_pid.h"
 
 #ifdef __cplusplus
@@ -11,8 +12,10 @@ typedef struct
     float _epsilon;
     float theta;
     float speed;
-    float speed_limit;
 } foc_pll_t;
+
+void foc_pll_init(foc_pll_t *pll);
+void foc_pll(foc_pll_t *pll, const foc_sin_cos_t *input);
 
 #ifdef __cplusplus
 }

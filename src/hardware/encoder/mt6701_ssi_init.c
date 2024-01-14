@@ -4,8 +4,9 @@
 #include "hpm_soc.h"
 #include "hpm_synt_drv.h"
 #include <stdint.h>
+#include "mt6701_ssi_init.h"
 
-static void (*__isr_callback)(uint32_t);
+static ecnoder_callback_t __isr_callback;
 
 /**
  * @brief
@@ -15,10 +16,8 @@ static void (*__isr_callback)(uint32_t);
  * @param callback
  * @return int
  */
-int mt6701_ssi_init(uint32_t baud, sei_trigger_input_config_t *trigger_config, void (*isr_callback)(uint32_t))
+int mt6701_ssi_init(uint32_t baud, sei_trigger_input_config_t *trigger_config)
 {
-    __isr_callback = isr_callback;
-
     /* [1] 传输配置 */
     sei_tranceiver_config_t tranceiver_config = {0};
     tranceiver_config.mode = sei_synchronous_master_mode; // 同步主机模式
@@ -45,9 +44,9 @@ int mt6701_ssi_init(uint32_t baud, sei_trigger_input_config_t *trigger_config, v
     data_format_config.bit_order = sei_bit_msb_first;    // 比特顺序
     data_format_config.word_order = sei_word_nonreverse; // 字节序反转
     data_format_config.word_len = 14;                    // 字长 0-31: 1-32bit
-    data_format_config.last_bit = 0;                     // 末个填充位 5b
-    data_format_config.first_bit = 13;                   // 首个填充位 5b
-    data_format_config.max_bit = 13;                     // 最高位 5b
+    data_format_config.first_bit = 15;                   // 首个填充位 5b
+    data_format_config.last_bit = 2;                     // 末个填充位 5b
+    data_format_config.max_bit = 15;                     // 最高位 5b
     data_format_config.min_bit = 0;                      // 最低位 5b
     sei_cmd_data_format_config_init(BOARD_SEI, SEI_SELECT_DATA, SEI_DAT_2, &data_format_config);
     /* 数据寄存器2保存4bit状态 */
@@ -204,6 +203,11 @@ int mt6701_ssi_init(uint32_t baud, sei_trigger_input_config_t *trigger_config, v
     return 0;
 }
 
+void mt6701_set_callback(ecnoder_callback_t cb)
+{
+    __isr_callback = cb;
+}
+
 /**
  * @brief 中断服务函数
  */
@@ -213,12 +217,15 @@ static void __isr_sei_fun(void)
     if (sei_get_irq_status(BOARD_SEI, BOARD_SEI_CTRL, sei_irq_latch1_event))
     {
         sei_clear_irq_flag(BOARD_SEI, BOARD_SEI_CTRL, sei_irq_latch1_event);
-        __isr_callback(sei_irq_latch1_event);
+        if (__isr_callback)
+            __isr_callback(sei_irq_latch1_event);
     }
 
     if (sei_get_irq_status(BOARD_SEI, BOARD_SEI_CTRL, sei_irq_trx_err_event))
     {
         sei_clear_irq_flag(BOARD_SEI, BOARD_SEI_CTRL, sei_irq_trx_err_event);
-        __isr_callback(sei_irq_trx_err_event);
+        if (__isr_callback)
+            __isr_callback(sei_irq_trx_err_event);
     }
 }
+

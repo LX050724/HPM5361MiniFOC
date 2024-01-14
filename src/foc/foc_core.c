@@ -1,4 +1,5 @@
 #include "foc_core.h"
+#include "project_config.h"
 #include <stdint.h>
 
 #define SQRT3 1.732050807568877f
@@ -14,9 +15,9 @@ static inline int32_t foc_min(int32_t a, int32_t b)
     return a < b ? a : b;
 }
 
-void foc_svpwm(const foc_alpha_beta_volt_t *volt, foc_pwm_t *pwm, int pwm_max)
+void foc_svpwm(const foc_alpha_beta_volt_t *volt, foc_pwm_t *pwm)
 {
-    int32_t pwm_half = pwm_max / 2;
+    int32_t pwm_half = SVPWM_MAX / 2;
     int32_t va = (volt->v_alpha) * pwm_half;
     int32_t vb = (volt->v_alpha * -0.5f + SQRT3_BY_2 * volt->v_beta) * pwm_half;
     int32_t vc = (volt->v_alpha * -0.5f - SQRT3_BY_2 * volt->v_beta) * pwm_half;

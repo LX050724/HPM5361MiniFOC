@@ -331,13 +331,6 @@ void board_led_toggle(uint8_t pin)
     gpio_toggle_pin(BOARD_LED_GPIO_CTRL, BOARD_LED_GPIO_INDEX, pin);
 }
 
-void board_init_uart(UART_Type *ptr)
-{
-    /* configure uart's pin before opening uart's clock */
-    init_uart_pins(ptr);
-    board_init_uart_clock(ptr);
-}
-
 void board_ungate_mchtmr_at_lp_mode(void)
 {
     /* Keep cpu clock on wfi, so that mchtmr irq can still work after wfi */
@@ -495,19 +488,6 @@ uint32_t board_init_can_clock(MCAN_Type *ptr)
 void board_init_rgb_pwm_pins(void)
 {
     init_led_pins_as_pwm();
-}
-
-void board_disable_output_rgb_led(uint8_t color)
-{
-}
-
-void board_enable_output_rgb_led(uint8_t color)
-{
-}
-
-void board_init_dac_pins(DAC_Type *ptr)
-{
-    init_dac_pins(ptr);
 }
 
 uint8_t board_get_led_pwm_off_level(void)

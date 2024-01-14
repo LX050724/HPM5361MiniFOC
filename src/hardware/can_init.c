@@ -8,6 +8,7 @@
 
 void board_init_canfd(uint32_t baudrate, mcan_node_mode_t mode)
 {
+    board_init_can_pins(BOARD_APP_CAN_BASE);
     clock_add_to_group(clock_can0, 0);
     clock_set_source_divider(clock_can0, clk_src_pll0_clk0, 10);
     uint32_t freq = clock_get_frequency(clock_can0);
@@ -106,7 +107,7 @@ int board_can_transmit_ext_txfifo_nonblocking(uint32_t ext_id, void *data, uint8
 {
     mcan_tx_frame_t can_frame = {};
     uint32_t fifo_index = 0;
-    can_frame.dlc = 8;
+    can_frame.dlc = dlc;
     can_frame.ext_id = ext_id;
     can_frame.use_ext_id = true;
     can_frame.event_fifo_control = 1;
