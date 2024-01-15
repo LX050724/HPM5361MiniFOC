@@ -11,8 +11,8 @@ typedef void (*ecnoder_callback_t)(uint32_t flag);
 
 float encoder_get_eleAngle();
 void encoder_get_eleAngle_sincos(foc_sin_cos_t *sincos);
-void encoder_set_param(uint8_t direction, uint8_t pole_pairs, uint16_t ang_offset);
-uint8_t encoder_get_pole_pairs();
+void encoder_set_param(int16_t pole_pairs, uint16_t ang_offset);
+int16_t encoder_get_pole_pairs();
 
 #if ENCODER_TYPE == ENCODER_MT6701
 #include "hpm_sei_drv.h"

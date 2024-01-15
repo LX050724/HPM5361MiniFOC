@@ -47,7 +47,7 @@ DMA_ATTR just_float_data vofa_data[BUF_NUM];
 float VBUS; //!<@brief 母线电压
 int intr_count;
 
-foc_qd_current_t out_qd_current = {0.2};
+foc_qd_current_t out_qd_current = {1};
 foc_pll_t speed_pll;
 
 #if 1
@@ -102,7 +102,7 @@ static void mt6701_isr_callback(uint32_t isr_flag)
         vofa_data[write_ptr].data[0] = qd_current.iq;
         vofa_data[write_ptr].data[1] = qd_current.id;
         vofa_data[write_ptr].data[2] = speed_pll.theta;
-        vofa_data[write_ptr].data[3] = speed_pll.speed / 7 / (2 * F_PI) * 60 * SPEED_PID_FREQUENCY;
+        vofa_data[write_ptr].data[3] = speed_pll.speed / encoder_get_pole_pairs() / (2 * F_PI) * 60 * SPEED_PID_FREQUENCY;
         // vofa_data[write_ptr].data[5] = foc_para.currentdpipar.outval;
 
         vofa_data[write_ptr].data[6] = uvw_current.iu;
@@ -209,11 +209,13 @@ int main(void)
 #endif
 
     /* 电角度校准 */
-    electrical_angle_calibration();
     // encoder_set_param(1, 7, 26211);
+    if (electrical_angle_calibration() == 0)
+    {
+        pwm_enable_all_output();
+        encoder_set_callback(mt6701_isr_callback);
+    }
 
-    pwm_enable_all_output();
-    encoder_set_callback(mt6701_isr_callback);
     int count = 0;
     while (1)
     {

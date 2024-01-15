@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hpm_common.h"
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,16 +24,13 @@ extern "C" {
 #define ENCODER_TYPE ENCODER_MT6701 // 编码器类型
 
 /* 时间参数 */
-#define AHB_CLOCK 240000000                     // AHB时钟
-#define PWM_FREQUENCY 50000                     // PWM频率
-#define PWM_RELOAD (AHB_CLOCK / PWM_FREQUENCY)  // PWM重载值
-#define SVPWM_MAX (PWM_RELOAD - 100)            // svpwm占空比最大值
-#define SPEED_PID_FREQUENCY 5000                // 速度、位置环频率
+#define PWM_FREQUENCY 50000                     // PWM频率(Hz)
+#define SPEED_PID_FREQUENCY 5000                // 速度、位置环频率(Hz)
+#define PWM_MAX_DUTY 0.96f                      // PWM最大占空比不建议超过96%
 #define ELECTRICAL_ANGLE_CALIBRATION_POWER 0.4f // 电角度校准油门
-#define ELECTRICAL_ANGLE_CALIBRATION_DELAY 500 // 电角度校准延迟
+#define ELECTRICAL_ANGLE_CALIBRATION_DELAY 500  // 电角度校准延迟(ms)
 
 /* ADC参数 */
-// #define USE_AUTO_SIMPLETIME 0                         // 自动切换采样时刻开关
 #define SAMPLING_RESISTOR 0.005f                      // 采样电阻 Ω
 #define CURRENT_AMP 20.0f                             // 电流运放放大倍数
 #define CURRENT_COE (SAMPLING_RESISTOR * CURRENT_AMP) // 电流系数 V/A
@@ -40,6 +38,11 @@ extern "C" {
 #define ADC_IGNORE_BIT 0                              // ADC低位舍弃
 #define ADC_ENABLE_FILTER 0                           // 启用2位滑动平均滤波
 #define ADC_CALIBRATION_TIMES 1024                    // ADC校准采样次数
+// #define USE_AUTO_SIMPLETIME 0                         // 自动切换采样时刻开关
+
+/* 不可修改 */
+#define AHB_CLOCK 240000000                    // AHB时钟频率(Hz)
+#define PWM_RELOAD (AHB_CLOCK / PWM_FREQUENCY) // PWM重载值
 
 #if ADC_CALIBRATION_TIMES > 65536
 #error "ADC_CALIBRATION_TIMES > 65536"

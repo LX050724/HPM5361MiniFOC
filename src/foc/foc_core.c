@@ -17,10 +17,12 @@ static inline int32_t foc_min(int32_t a, int32_t b)
 
 void foc_svpwm(const foc_alpha_beta_volt_t *volt, foc_pwm_t *pwm)
 {
-    int32_t pwm_half = SVPWM_MAX / 2;
-    int32_t va = (volt->v_alpha) * pwm_half;
-    int32_t vb = (volt->v_alpha * -0.5f + SQRT3_BY_2 * volt->v_beta) * pwm_half;
-    int32_t vc = (volt->v_alpha * -0.5f - SQRT3_BY_2 * volt->v_beta) * pwm_half;
+    int32_t pwm_half = PWM_RELOAD / 2;
+    float v_alpha = volt->v_alpha * PWM_MAX_DUTY;
+    float v_beta = volt->v_beta * PWM_MAX_DUTY;
+    int32_t va = (v_alpha) * pwm_half;
+    int32_t vb = (v_alpha * -0.5f + SQRT3_BY_2 * v_beta) * pwm_half;
+    int32_t vc = (v_alpha * -0.5f - SQRT3_BY_2 * v_beta) * pwm_half;
     int32_t vmax = foc_max(va, foc_max(vb, vc));
     int32_t vmin = foc_min(va, foc_min(vb, vc));
     int32_t vcom = (vmax + vmin) / 2 + pwm_half;
