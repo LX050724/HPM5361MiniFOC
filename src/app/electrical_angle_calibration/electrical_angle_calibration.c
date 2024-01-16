@@ -1,4 +1,5 @@
 #include "SEGGER_RTT.h"
+#include "app/MotorClass.h"
 #include "foc/fast_sin.h"
 #include "foc/foc_core.h"
 #include "hardware/encoder/encoder.h"
@@ -7,7 +8,7 @@
 #include <math.h>
 #include <stdint.h>
 
-void force_drive(float ang, float power)
+void force_drive(MotorClass_t *motor, float ang, float power)
 {
     foc_sin_cos_t ang_sincos = {};
     foc_qd_current_t qd_current = {};
@@ -18,7 +19,7 @@ void force_drive(float ang, float power)
     foc_sin_cos(ang, &ang_sincos);
     foc_inv_park(&qd_current, &ang_sincos, &alpha_beta_volt);
     foc_svpwm(&alpha_beta_volt, &pwm);
-    pwm_setvalue(&pwm);
+    motor->set_pwm_cb(motor, &pwm);
 }
 
 float LeastSquareLinearFit(int y[], const int num, float *a, float *b)
@@ -50,25 +51,25 @@ float LeastSquareLinearFit(int y[], const int num, float *a, float *b)
     return sqrtf(sum_q / num);
 }
 
-int electrical_angle_calibration()
+int electrical_angle_calibration(MotorClass_t *motor)
 {
     pwm_enable_all_output();
     int ang_table[12];
 
     for (int i = 0; i < 12; i++)
     {
-        force_drive(F_PI * i / 6, ELECTRICAL_ANGLE_CALIBRATION_POWER);
+        force_drive(motor, F_PI * i / 6, ELECTRICAL_ANGLE_CALIBRATION_POWER);
         clock_cpu_delay_ms(ELECTRICAL_ANGLE_CALIBRATION_DELAY);
         ang_table[i] = encoder_get_rawAngle();
         SEGGER_RTT_printf(0, "1 %2d 0x%04x\n", i, ang_table[i]);
     }
 
-    force_drive(0, ELECTRICAL_ANGLE_CALIBRATION_POWER);
+    force_drive(motor, 0, ELECTRICAL_ANGLE_CALIBRATION_POWER);
     clock_cpu_delay_ms(ELECTRICAL_ANGLE_CALIBRATION_DELAY);
 
     for (int i = 11; i >= 0; i--)
     {
-        force_drive(F_PI * i / 6, ELECTRICAL_ANGLE_CALIBRATION_POWER);
+        force_drive(motor, F_PI * i / 6, ELECTRICAL_ANGLE_CALIBRATION_POWER);
         clock_cpu_delay_ms(ELECTRICAL_ANGLE_CALIBRATION_DELAY);
         ang_table[i] = (ang_table[i] + encoder_get_rawAngle()) / 2;
         SEGGER_RTT_printf(0, "2 %2d 0x%04x 0x%04x\n", i, encoder_get_rawAngle(), ang_table[i]);
@@ -106,6 +107,9 @@ int electrical_angle_calibration()
     }
     SEGGER_RTT_printf(0, "calibration success: direction = %d, offset = %d, pole_pairs = %d\n", b > 0, offset,
                       pole_pairs);
-    encoder_set_param(pole_pairs, offset);
+
+    motor->encoder.pole_pairs = pole_pairs;
+    motor->encoder.ang_offset = offset;
+
     return 0;
 }

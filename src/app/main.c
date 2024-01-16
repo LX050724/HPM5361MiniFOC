@@ -2,12 +2,14 @@
 #include "app/current_calibration/current_calibration.h"
 #include "app/electrical_angle_calibration/electrical_angle_calibration.h"
 #include "board.h"
+#include "foc/fast_sin.h"
 #include "foc/foc_core.h"
 #include "foc/foc_pid.h"
 #include "foc/foc_pll.h"
 #include "hardware/adc_init.h"
 #include "hardware/can_init.h"
 #include "hardware/current/current.h"
+#include "hardware/encoder/encoder.h"
 #include "hardware/encoder/mt6701_ssi_init.h"
 #include "hardware/pwm_init.h"
 #include "hardware/trgm.h"
@@ -45,10 +47,8 @@ volatile int write_ptr;
 DMA_ATTR just_float_data vofa_data[BUF_NUM];
 
 float VBUS; //!<@brief 母线电压
-int intr_count;
 
-foc_qd_current_t out_qd_current = {1};
-foc_pll_t speed_pll;
+MotorClass_t motor0;
 
 #if 1
 static void mt6701_isr_callback(uint32_t isr_flag)
@@ -71,55 +71,33 @@ static void mt6701_isr_callback(uint32_t isr_flag)
         SEGGER_RTT_printf(0, "VBUS Error: %dmV\n", (int)(VBUS * 1000));
     }
 
-    foc_uvw_current_t uvw_current;
-    current_get_cal(adc_GetRaw_V(), adc_GetRaw_W(), &uvw_current);
-
-    foc_alpha_beta_current_t alpha_beta_current;
-    foc_sin_cos_t sin_cos;
-    foc_qd_current_t qd_current;
-    foc_alpha_beta_volt_t ab;
-    foc_pwm_t pwm;
-
-    encoder_get_eleAngle_sincos(&sin_cos);
-    foc_clarke(&uvw_current, &alpha_beta_current);
-    foc_park(&alpha_beta_current, &sin_cos, &qd_current);
-
-    // TODO pid ...
-    foc_inv_park(&out_qd_current, &sin_cos, &ab);
-    foc_svpwm(&ab, &pwm);
-    pwm_setvalue(&pwm);
-
-    if (++intr_count >= (PWM_FREQUENCY / SPEED_PID_FREQUENCY))
-    {
-        foc_pll(&speed_pll, &sin_cos);
-        float speed = speed_pll.speed / encoder_get_pole_pairs() / (2 * F_PI) * 60 * SPEED_PID_FREQUENCY;
-        intr_count = 0;
-    }
+    Motor_RunFoc(&motor0);
 
     /* 使能DTR才发送数据，方便vofa静止查看波形 */
     if (dtr_enable)
     {
-        vofa_data[write_ptr].data[0] = qd_current.iq;
-        vofa_data[write_ptr].data[1] = qd_current.id;
-        vofa_data[write_ptr].data[2] = speed_pll.theta;
-        vofa_data[write_ptr].data[3] = speed_pll.speed / encoder_get_pole_pairs() / (2 * F_PI) * 60 * SPEED_PID_FREQUENCY;
+        vofa_data[write_ptr].data[0] = motor0.qd_current.iq;
+        vofa_data[write_ptr].data[1] = motor0.qd_current.id;
+        vofa_data[write_ptr].data[2] = motor0.speed_pll.theta;
+        vofa_data[write_ptr].data[3] =
+            motor0.speed_pll.speed / motor0.encoder.pole_pairs / (2 * F_PI) * 60 * SPEED_PID_FREQUENCY;
         // vofa_data[write_ptr].data[5] = foc_para.currentdpipar.outval;
 
-        vofa_data[write_ptr].data[6] = uvw_current.iu;
-        vofa_data[write_ptr].data[7] = uvw_current.iv;
-        vofa_data[write_ptr].data[8] = uvw_current.iw;
+        vofa_data[write_ptr].data[6] = motor0.uvw_current.iu;
+        vofa_data[write_ptr].data[7] = motor0.uvw_current.iv;
+        vofa_data[write_ptr].data[8] = motor0.uvw_current.iw;
 
-        vofa_data[write_ptr].data[9] = encoder_get_eleAngle();
+        vofa_data[write_ptr].data[9] = encoder_get_eleAngle(&motor0.encoder, motor0.raw_angle);
 
         vofa_data[write_ptr].data[10] = VBUS;
-        vofa_data[write_ptr].data[11] = speed_pll._epsilon;
+        vofa_data[write_ptr].data[11] = motor0.speed_pll._epsilon;
 
         // vofa_data[write_ptr].data[12] = speed_pid.cur;
         // vofa_data[write_ptr].data[14] = pll_speed * PWM_FREQUENCY * 60 / 2 / F_PI;
 
-        vofa_data[write_ptr].data[12] = pwm.pwm_u;
-        vofa_data[write_ptr].data[13] = pwm.pwm_v;
-        vofa_data[write_ptr].data[14] = pwm.pwm_w;
+        // vofa_data[write_ptr].data[12] = pwm.pwm_u;
+        // vofa_data[write_ptr].data[13] = pwm.pwm_v;
+        // vofa_data[write_ptr].data[14] = pwm.pwm_w;
 
         // vofa_data[write_ptr].data[14] = (float)hpm_csr_get_core_cycle() / hpm_core_clock;
 
@@ -146,6 +124,26 @@ static void mt6701_isr_callback(uint32_t isr_flag)
     // gpio_write_pin(HPM_GPIO0, GPIO_OE_GPIOB, 5, 0);
 }
 #endif
+
+void motor0_get_uvw_current(MotorClass_t *motor, foc_uvw_current_t *uvw_current)
+{
+    current_get_cal(&motor->current_cal, adc_GetRaw_V(), adc_GetRaw_W(), uvw_current);
+}
+
+uint16_t motor0_get_raw_angle(MotorClass_t *motor)
+{
+    return encoder_get_rawAngle();
+}
+
+void motor0_set_pwm(MotorClass_t *motor, const foc_pwm_t *pwm)
+{
+    pwm_setvalue(pwm);
+}
+
+void motor0_enable_pwm(MotorClass_t *motor, bool en)
+{
+    en ? pwm_enable_all_output() : pwm_disable_all_output();
+}
 
 int main(void)
 {
@@ -177,12 +175,18 @@ int main(void)
         vofa_data[i].tail[3] = 0x7f;
     }
 
-    /* PLL测速参数初始化 */
-    speed_pll.pi.kp = 0.2;
-    speed_pll.pi.ki = 0.1;
-    speed_pll.pi.integral_limit = 5;
-    speed_pll.pi.output_limit = 2000;
-    foc_pll_init(&speed_pll);
+    /* PLL测速参数 */
+    motor0.speed_pll.pi.kp = 0.2;
+    motor0.speed_pll.pi.ki = 0.1;
+    motor0.speed_pll.pi.integral_limit = 5;
+    motor0.speed_pll.pi.output_limit = 2000;
+
+    motor0.get_uvw_current_cb = motor0_get_uvw_current;
+    motor0.get_raw_angle_cb = motor0_get_raw_angle;
+    motor0.set_pwm_cb = motor0_set_pwm;
+    motor0.enable_pwm = motor0_enable_pwm;
+
+    Motor_Init(&motor0);
 
     /* PWM初始化 */
     pwm_init(20, 50);
@@ -195,7 +199,7 @@ int main(void)
     trgm_connect(HPM_TRGM0_INPUT_SRC_PWM1_CH9REF, HPM_TRGM0_OUTPUT_SRC_ADCX_PTRGI0B, trgm_output_same_as_input, false);
 
     /* adc中值校准程序 */
-    current_calibration();
+    current_calibration(&motor0);
 
     /* 编码器初始化 */
 #if ENCODER_TYPE == ENCODER_MT6701
@@ -210,9 +214,9 @@ int main(void)
 
     /* 电角度校准 */
     // encoder_set_param(1, 7, 26211);
-    if (electrical_angle_calibration() == 0)
+    if (electrical_angle_calibration(&motor0) == 0)
     {
-        pwm_enable_all_output();
+        Motor_SetMode(&motor0, VOLTAGE_OPEN_LOOP_MODE);
         encoder_set_callback(mt6701_isr_callback);
     }
 

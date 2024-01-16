@@ -26,7 +26,6 @@ extern "C" {
 /* 时间参数 */
 #define PWM_FREQUENCY 50000                     // PWM频率(Hz)
 #define SPEED_PID_FREQUENCY 5000                // 速度、位置环频率(Hz)
-#define PWM_MAX_DUTY 0.96f                      // PWM最大占空比不建议超过96%
 #define ELECTRICAL_ANGLE_CALIBRATION_POWER 0.4f // 电角度校准油门
 #define ELECTRICAL_ANGLE_CALIBRATION_DELAY 500  // 电角度校准延迟(ms)
 
@@ -39,6 +38,15 @@ extern "C" {
 #define ADC_ENABLE_FILTER 0                           // 启用2位滑动平均滤波
 #define ADC_CALIBRATION_TIMES 1024                    // ADC校准采样次数
 // #define USE_AUTO_SIMPLETIME 0                         // 自动切换采样时刻开关
+
+
+/**
+ * @brief 电压限幅参数
+ * @note 限幅矢量模不能超过 2/√3 * 0.96
+ *       其中0.96为PWM最大占空比
+ */
+#define UQ_LIMIT 1.0f // Q轴电压限幅
+#define UD_LIMIT 0.4f // D轴电压限幅
 
 /* 不可修改 */
 #define AHB_CLOCK 240000000                    // AHB时钟频率(Hz)

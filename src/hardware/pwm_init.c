@@ -136,7 +136,7 @@ int pwm_init(uint32_t adc_trigger_cmp, uint32_t dead_time_ns)
     return 0;
 }
 
-void pwm_setvalue(foc_pwm_t *par)
+void pwm_setvalue(const foc_pwm_t *par)
 {
     uint32_t pwm_u_half = par->pwm_u >> 1;
     uint32_t pwm_v_half = par->pwm_v >> 1;

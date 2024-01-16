@@ -11,6 +11,7 @@ static volatile int calibration_status;
 static volatile uint32_t calibration_v;
 static volatile uint32_t calibration_w;
 static volatile uint32_t calibration_count;
+static MotorClass_t *gpMotor;
 
 static void __adc_cb(ADC16_Type *adc, uint32_t flag)
 {
@@ -22,17 +23,21 @@ static void __adc_cb(ADC16_Type *adc, uint32_t flag)
         {
             calibration_v /= ADC_CALIBRATION_TIMES;
             calibration_w /= ADC_CALIBRATION_TIMES;
-            current_set_calibration(calibration_v, calibration_w);
+            current_set_calibration(&gpMotor->current_cal, calibration_v, calibration_w);
             calibration_status = 2;
         }
     }
 }
 
-int current_calibration()
+int current_calibration(MotorClass_t *motor)
 {
     pwm_disable_all_output();
     clock_cpu_delay_ms(500);
 
+    gpMotor = motor;
+    calibration_v = 0;
+    calibration_w = 0;
+    calibration_count = 0;
     calibration_status = 1;
     adc_set_callback(__adc_cb);
     adc_enable_irq(1);
@@ -45,6 +50,7 @@ int current_calibration()
     adc_disable_it();
     adc_disable_irq();
     adc_set_callback(NULL);
+    gpMotor = NULL;
 
     SEGGER_RTT_printf(0, "current calibration done\n");
     SEGGER_RTT_printf(0, "  V offset %dmV\n", (int)(adc_voltage(calibration_v) * 1000));

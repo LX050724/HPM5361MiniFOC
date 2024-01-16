@@ -1,13 +1,12 @@
 #pragma once
 
-#include "hardware/adc_init.h"
-#include "hardware/current/current.h"
+#include "app/MotorClass.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int current_calibration();
+int current_calibration(MotorClass_t *motor);
 
 #ifdef __cplusplus
 }

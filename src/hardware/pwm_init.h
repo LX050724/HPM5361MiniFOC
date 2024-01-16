@@ -20,7 +20,7 @@ static inline void pwm_disable_all_output(void)
     pwm_enable_sw_force(BOARD_BLDCPWM);
 }
 
-void pwm_setvalue(foc_pwm_t *par);
+void pwm_setvalue(const foc_pwm_t *par);
 
 #ifdef __cplusplus
 }
