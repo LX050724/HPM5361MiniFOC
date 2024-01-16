@@ -26,7 +26,7 @@ void init_xtal_pins(void)
      */
 }
 
-void init_jtag_pins()
+void init_jtag_pins(void)
 {
     HPM_IOC->PAD[IOC_PAD_PA06].FUNC_CTL = IOC_PA06_FUNC_CTL_JTAG_TCK;
     HPM_IOC->PAD[IOC_PAD_PA05].FUNC_CTL = IOC_PA05_FUNC_CTL_JTAG_TDI;

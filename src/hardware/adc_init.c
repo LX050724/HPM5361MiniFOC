@@ -23,7 +23,7 @@ typedef struct ATTR_ALIGN(ADC_SOC_DMA_ADDR_ALIGNMENT)
 
 static DMA_ATTR CurrentADC_t adc;
 
-void init_trigger_cfg()
+void init_trigger_cfg(void)
 {
     adc_pmt_config_t pmt_cfg2 = {}, pmt_cfg1 = {};
 
@@ -101,17 +101,17 @@ void adc_set_callback(adc_callback_t cb)
     __isr_callback = cb;
 }
 
-uint16_t adc_GetRaw_V()
+uint16_t adc_GetRaw_V(void)
 {
     return adc.adc_w_buff[BOARD_BLDC_ADC_CH_W_TRG * 4 + 0].value;
 }
 
-uint16_t adc_GetRaw_W()
+uint16_t adc_GetRaw_W(void)
 {
     return adc.adc_v_buff[BOARD_BLDC_ADC_CH_V_TRG * 4 + 0].value;
 }
 
-uint16_t adc_GetRaw_VBUS()
+uint16_t adc_GetRaw_VBUS(void)
 {
     return adc.adc_v_buff[BOARD_BLDC_ADC_CH_V_TRG * 4 + 1].value;
 }

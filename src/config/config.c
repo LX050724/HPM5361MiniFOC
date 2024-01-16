@@ -18,7 +18,7 @@ static void config_erase(uint32_t start_addr, uint32_t size)
     nor_flash_erase(&e2p.nor_config, start_addr, size);
 }
 
-void config_init()
+void config_init(void)
 {
     e2p.nor_config.xpi_base = BOARD_APP_XPI_NOR_XPI_BASE;
     e2p.nor_config.opt_header = BOARD_APP_XPI_NOR_CFG_OPT_HDR;

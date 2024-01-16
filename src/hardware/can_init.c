@@ -45,9 +45,9 @@ void board_init_canfd(uint32_t baudrate, mcan_node_mode_t mode)
 }
 
 SDK_DECLARE_EXT_ISR_M(BOARD_APP_CAN_IRQn, board_canfd_isr);
-void board_canfd_isr()
+void board_canfd_isr(void)
 {
-    mcan_rx_message_t s_can_rx_buf;
+    mcan_rx_message_t s_can_rx_buf = {};
     uint32_t flags = mcan_get_interrupt_flags(BOARD_APP_CAN_BASE);
 
     /* New message is available in RXFIFO0 */
