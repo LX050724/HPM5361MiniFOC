@@ -77,20 +77,25 @@ static void mt6701_isr_callback(uint32_t isr_flag)
     if (dtr_enable)
     {
         vofa_data[write_ptr].data[0] = motor0.qd_current.iq;
-        vofa_data[write_ptr].data[1] = motor0.qd_current.id;
-        vofa_data[write_ptr].data[2] = motor0.speed_pll.theta;
-        vofa_data[write_ptr].data[3] =
-            motor0.speed_pll.speed / motor0.encoder.pole_pairs / (2 * F_PI) * 60 * SPEED_PID_FREQUENCY;
+        vofa_data[write_ptr].data[1] = motor0.qd_current_exp.iq;
+        vofa_data[write_ptr].data[2] = motor0.qd_current.id;
+        vofa_data[write_ptr].data[3] = motor0.qd_current_exp.id;
+        vofa_data[write_ptr].data[4] = motor0.speed;
+        vofa_data[write_ptr].data[5] = motor0.speed_exp;
+        
+        // vofa_data[write_ptr].data[2] = motor0.speed_pll.theta;
+        // vofa_data[write_ptr].data[3] =
+        //     motor0.speed_pll.speed / motor0.encoder.pole_pairs / (2 * F_PI) * 60 * SPEED_PID_FREQUENCY;
         // vofa_data[write_ptr].data[5] = foc_para.currentdpipar.outval;
 
         vofa_data[write_ptr].data[6] = motor0.uvw_current.iu;
         vofa_data[write_ptr].data[7] = motor0.uvw_current.iv;
         vofa_data[write_ptr].data[8] = motor0.uvw_current.iw;
 
-        vofa_data[write_ptr].data[9] = encoder_get_eleAngle(&motor0.encoder, motor0.raw_angle);
+        vofa_data[write_ptr].data[9] = motor0.raw_angle;
 
         vofa_data[write_ptr].data[10] = VBUS;
-        vofa_data[write_ptr].data[11] = motor0.speed_pll._epsilon;
+        vofa_data[write_ptr].data[11] = motor0.angle_exp;
 
         // vofa_data[write_ptr].data[12] = speed_pid.cur;
         // vofa_data[write_ptr].data[14] = pll_speed * PWM_FREQUENCY * 60 / 2 / F_PI;
@@ -181,6 +186,13 @@ int main(void)
     motor0.speed_pll.pi.integral_limit = 5;
     motor0.speed_pll.pi.output_limit = 2000;
 
+    motor0.current_iq_pid.kp = 1.6f;
+    motor0.current_iq_pid.ki = 0.07f;
+    motor0.current_iq_pid.integral_limit = 6;
+    motor0.current_id_pid.kp = 1.6f;
+    motor0.current_id_pid.ki = 0.03f;
+    motor0.current_id_pid.integral_limit = 3;
+
     motor0.get_uvw_current_cb = motor0_get_uvw_current;
     motor0.get_raw_angle_cb = motor0_get_raw_angle;
     motor0.set_pwm_cb = motor0_set_pwm;
@@ -216,7 +228,7 @@ int main(void)
     // encoder_set_param(1, 7, 26211);
     if (electrical_angle_calibration(&motor0) == 0)
     {
-        Motor_SetMode(&motor0, VOLTAGE_OPEN_LOOP_MODE);
+        Motor_SetMode(&motor0, CURRENT_MODE);
         encoder_set_callback(mt6701_isr_callback);
     }
 
@@ -250,15 +262,15 @@ typedef struct
 } CmdCallback_t;
 
 CmdCallback_t cmd_list[] = {
-    // {"exp_iq", NULL, &foc_para.currentqpipar.target},
-    // {"id_p", NULL, &foc_para.currentdpipar.i_kp},
-    // {"id_i", NULL, &foc_para.currentdpipar.i_ki},
-    // {"iq_p", NULL, &foc_para.currentqpipar.i_kp},
-    // {"iq_i", NULL, &foc_para.currentqpipar.i_ki},
+    {"exp_iq", NULL, &motor0.qd_current_exp.iq},
+    {"exp_id", NULL, &motor0.qd_current_exp.id},
+    {"id_p", NULL, &motor0.current_id_pid.kp},
+    {"id_i", NULL, &motor0.current_id_pid.ki},
+    {"iq_p", NULL, &motor0.current_iq_pid.kp},
+    {"iq_i", NULL, &motor0.current_iq_pid.ki},
     // {"speed_p", NULL, &speed_pid.i_kp},
     // {"speed_i", NULL, &speed_pid.i_ki},
     // {"exp_speed", NULL, &speed_pid.target},
-    // {"exp_id", NULL, &foc_para.currentdpipar.target},
     // {"speed_filter", NULL, &speed_filter},
 };
 
@@ -279,7 +291,7 @@ void usbd_read_callback(char *data, uint32_t len)
             {
                 if (strcmp(cmd_list[index].name, name) == 0)
                 {
-                    SEGGER_RTT_printf(0, "set %s %f\n", cmd_list[index].name, value);
+                    SEGGER_RTT_printf(0, "set %s %d\n", cmd_list[index].name, (int)(value * 1000));
                     if (cmd_list[index].fun == NULL)
                     {
                         *(cmd_list[index].tar_val) = value;
