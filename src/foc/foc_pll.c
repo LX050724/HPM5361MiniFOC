@@ -2,6 +2,8 @@
 #include "foc/fast_sin.h"
 #include "foc/foc_core.h"
 #include "foc/foc_pid.h"
+#include "project_config.h"
+#include <stdint.h>
 
 void foc_pll_init(foc_pll_t *pll)
 {
@@ -25,4 +27,12 @@ void foc_pll(foc_pll_t *pll, const foc_sin_cos_t *input)
 
     while (pll->theta < -F_PI)
         pll->theta += 2 * F_PI;
+}
+
+void foc_pll2(foc_pll_t *pll, uint16_t raw_ang)
+{    
+    int16_t diff = foc_pid_diff(raw_ang, pll->last_ang, 65536);
+    pll->last_ang = raw_ang;
+    pll->speed += (diff / 65536.0f - pll->speed) * pll->pi.kp;
+    pll->speed = foc_pid_limit(pll->speed, pll->pi.output_limit);
 }

@@ -37,6 +37,9 @@ typedef struct MotorClass_t
     foc_pid_contrl_t current_iq_pid;
     foc_pid_contrl_t current_id_pid;
 
+    float bus_voltage;
+    float power;
+
     uint16_t angle_exp;
     float speed_exp;
     foc_qd_current_t qd_current_exp;

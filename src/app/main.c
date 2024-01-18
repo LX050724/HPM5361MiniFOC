@@ -71,6 +71,8 @@ static void mt6701_isr_callback(uint32_t isr_flag)
         SEGGER_RTT_printf(0, "VBUS Error: %dmV\n", (int)(VBUS * 1000));
     }
 
+    motor0.bus_voltage = VBUS;
+
     Motor_RunFoc(&motor0);
 
     /* 使能DTR才发送数据，方便vofa静止查看波形 */
@@ -82,7 +84,7 @@ static void mt6701_isr_callback(uint32_t isr_flag)
         vofa_data[write_ptr].data[3] = motor0.qd_current_exp.id;
         vofa_data[write_ptr].data[4] = motor0.speed;
         vofa_data[write_ptr].data[5] = motor0.speed_exp;
-        
+
         // vofa_data[write_ptr].data[2] = motor0.speed_pll.theta;
         // vofa_data[write_ptr].data[3] =
         //     motor0.speed_pll.speed / motor0.encoder.pole_pairs / (2 * F_PI) * 60 * SPEED_PID_FREQUENCY;
@@ -95,9 +97,8 @@ static void mt6701_isr_callback(uint32_t isr_flag)
         vofa_data[write_ptr].data[9] = motor0.raw_angle;
 
         vofa_data[write_ptr].data[10] = VBUS;
-        vofa_data[write_ptr].data[11] = motor0.angle_exp;
+        vofa_data[write_ptr].data[11] = motor0.power;
 
-        // vofa_data[write_ptr].data[12] = speed_pid.cur;
         // vofa_data[write_ptr].data[14] = pll_speed * PWM_FREQUENCY * 60 / 2 / F_PI;
 
         // vofa_data[write_ptr].data[12] = pwm.pwm_u;
@@ -181,10 +182,23 @@ int main(void)
     }
 
     /* PLL测速参数 */
-    motor0.speed_pll.pi.kp = 0.2;
-    motor0.speed_pll.pi.ki = 0.1;
-    motor0.speed_pll.pi.integral_limit = 5;
+    // motor0.speed_pll.pi.kp = 0.2;
+    // motor0.speed_pll.pi.ki = 0.1;
+    // motor0.speed_pll.pi.integral_limit = 5;
     motor0.speed_pll.pi.output_limit = 2000;
+
+    motor0.speed_pll.pi.kp = 0.05;
+    motor0.speed_pll.pi.output_limit = 200;
+
+    motor0.angle_pid.kp = 0.12;
+    motor0.angle_pid.ki = 0.005;
+    motor0.angle_pid.integral_limit = 500;
+    motor0.angle_pid.output_limit = 1000;
+
+    motor0.speed_pid.kp = 0.01f;
+    motor0.speed_pid.ki = 0.01f;
+    motor0.speed_pid.integral_limit = 5;
+    motor0.speed_pid.output_limit = 10;
 
     motor0.current_iq_pid.kp = 1.6f;
     motor0.current_iq_pid.ki = 0.07f;
@@ -228,7 +242,7 @@ int main(void)
     // encoder_set_param(1, 7, 26211);
     if (electrical_angle_calibration(&motor0) == 0)
     {
-        Motor_SetMode(&motor0, CURRENT_MODE);
+        Motor_SetMode(&motor0, ANGLE_MODE);
         encoder_set_callback(mt6701_isr_callback);
     }
 
@@ -261,17 +275,27 @@ typedef struct
     float *tar_val;
 } CmdCallback_t;
 
+void set_expang(float ang)
+{
+    motor0.angle_exp = ang;
+}
+
 CmdCallback_t cmd_list[] = {
     {"exp_iq", NULL, &motor0.qd_current_exp.iq},
     {"exp_id", NULL, &motor0.qd_current_exp.id},
     {"id_p", NULL, &motor0.current_id_pid.kp},
     {"id_i", NULL, &motor0.current_id_pid.ki},
+    {"id_il", NULL, &motor0.current_id_pid.integral_limit},
     {"iq_p", NULL, &motor0.current_iq_pid.kp},
     {"iq_i", NULL, &motor0.current_iq_pid.ki},
-    // {"speed_p", NULL, &speed_pid.i_kp},
-    // {"speed_i", NULL, &speed_pid.i_ki},
-    // {"exp_speed", NULL, &speed_pid.target},
-    // {"speed_filter", NULL, &speed_filter},
+    {"iq_il", NULL, &motor0.current_iq_pid.integral_limit},
+    {"speed_p", NULL, &motor0.speed_pid.kp},
+    {"speed_i", NULL, &motor0.speed_pid.ki},
+    {"exp_speed", NULL, &motor0.speed_exp},
+    {"ang_p", NULL, &motor0.angle_pid.kp},
+    {"ang_i", NULL, &motor0.angle_pid.ki},
+    {"exp_ang", set_expang, NULL},
+    {"speed_filter", NULL, &motor0.speed_pll.pi.kp},
 };
 
 void usbd_read_callback(char *data, uint32_t len)

@@ -40,6 +40,16 @@ static inline float foc_pid_limit2(float in, float max, float min)
     return in;
 }
 
+static inline int foc_pid_diff(int a, int b, int rand)
+{
+    int diff = a - b;
+    if (diff > rand / 2)
+        diff -= rand;
+    if (diff < -rand / 2)
+        diff += rand;
+    return diff;
+}
+
 #ifdef __cplusplus
 }
 #endif
