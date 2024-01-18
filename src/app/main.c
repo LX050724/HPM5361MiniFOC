@@ -187,12 +187,12 @@ int main(void)
     // motor0.speed_pll.pi.integral_limit = 5;
     motor0.speed_pll.pi.output_limit = 2000;
 
-    motor0.speed_pll.pi.kp = 0.05;
+    motor0.speed_pll.pi.kp = 0.05f;
     motor0.speed_pll.pi.output_limit = 200;
 
-    motor0.angle_pid.kp = 0.12;
-    motor0.angle_pid.ki = 0.005;
-    motor0.angle_pid.integral_limit = 500;
+    motor0.angle_pid.kp = 0.08f;
+    motor0.angle_pid.ki = 0.002f;
+    motor0.angle_pid.integral_limit = 300;
     motor0.angle_pid.output_limit = 1000;
 
     motor0.speed_pid.kp = 0.01f;
